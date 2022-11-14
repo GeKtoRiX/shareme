@@ -2,7 +2,7 @@ import React from 'react';
 // Redirection to other routes.
 import { useNavigate } from 'react-router-dom';
 // Authorization via Google account
-import { GoogleLogin, googleLogout } from '@react-oauth/google';
+import { GoogleLogin } from '@react-oauth/google';
 // Decoder for google user's information.
 import jwt_decode from 'jwt-decode';
 // Client for connection with Sanity DB.
@@ -34,19 +34,18 @@ const Login = () => {
               <img src={logo} width='140px' alt='logo' />
             </div>
             {user ? (
-              <div>{googleLogout()}</div>
+              <div>Log out</div>
             ) : (
               // Google Authentication.
               <GoogleLogin
                 // Successful authorization.
                 onSuccess={(response) => {
+                  // Google user's information.
+                  const userInfo = jwt_decode(response.credential);
                   // Storing user data in browser localStorage.
-                  localStorage.setItem('user', JSON.stringify(response));
+                  localStorage.setItem('user', JSON.stringify(userInfo));
                   // Destructuring google authorization data(userName,img,id).
-                  const { name, picture, sub } = jwt_decode(
-                    response.credential
-                  );
-
+                  const { name, picture, sub } = userInfo;
                   // Information for creating a new 'google user' in Sanity DB.
                   const doc = {
                     _id: sub,
@@ -57,7 +56,6 @@ const Login = () => {
                     // Field with google users img.
                     image: picture,
                   };
-
                   client
                     // Create a new 'google user' in Sanity DB if it doesnt exist.
                     .createIfNotExists(doc)
